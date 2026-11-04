@@ -3,6 +3,7 @@ import shutil
 from typing import List
 from fastapi import FastAPI, UploadFile, File, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import FileResponse 
 
 from .models import RAGQueryParams, RAGResponse, DocumentInfo
 from .rag_engine import RAGEngine
@@ -18,6 +19,16 @@ app.add_middleware(
 )
 
 rag_engine = RAGEngine()
+
+@app.get("/", include_in_schema=False)
+async def serve_ui():
+    current_dir = os.path.dirname(os.path.abspath(__file__))
+    html_path = os.path.join(current_dir, "..", "static", "index.html")
+    
+    if not os.path.exists(html_path):
+        return {"error": f"Could not find index.html at {html_path}. Make sure it is in src/static/index.html"}
+        
+    return FileResponse(html_path)
 
 @app.post("/api/query", response_model=RAGResponse)
 async def query_rag(params: RAGQueryParams):

@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>V1 RAG - Crime & Punishment</title>
+    <style>
+        body { font-family: system-ui, sans-serif; max-width: 1000px; margin: 0 auto; padding: 20px; display: grid; grid-template-columns: 1fr 2fr; gap: 20px; }
+        .panel { background: #f8f9fa; padding: 20px; border-radius: 8px; border: 1px solid #ddd; }
+        h2 { margin-top: 0; font-size: 1.2rem; }
+        input, button, select { margin-bottom: 10px; width: 100%; padding: 8px; box-sizing: border-box; }
+        button { background: #0066cc; color: white; border: none; border-radius: 4px; cursor: pointer; }
+        button:hover { background: #0052a3; }
+        .citation { display: inline-block; background: #e2e8f0; padding: 2px 6px; border-radius: 4px; font-size: 0.8rem; margin: 2px; cursor: pointer; }
+        .citation:hover { background: #cbd5e1; }
+        #modal { display: none; position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); background: white; padding: 20px; border: 1px solid #ccc; box-shadow: 0 4px 6px rgba(0,0,0,0.1); width: 80%; max-width: 600px; z-index: 100; border-radius: 8px; }
+        #modal-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 99; }
+        .doc-item { display: flex; justify-content: space-between; align-items: center; background: white; padding: 8px; margin-bottom: 8px; border: 1px solid #ddd; border-radius: 4px;}
+        .doc-item button { width: auto; margin: 0; background: #dc2626; padding: 4px 8px;}
+    </style>
+</head>
+<body>
+
+    <!-- Left Panel: Settings & Docs -->
+    <div class="panel">
+        <h2>1. Document Management</h2>
+        <input type="file" id="fileInput" accept=".txt,.md">
+        <button onclick="uploadDoc()">Upload Document</button>
+        <div id="docList"></div>
+
+        <h2 style="margin-top: 20px;">2. RAG Parameters</h2>
+        <label>Chunk Size (chars): <span id="cs-val">800</span></label>
+        <input type="range" id="chunkSize" min="200" max="2000" step="100" value="800" oninput="document.getElementById('cs-val').innerText=this.value">
+        
+        <label>Overlap (%): <span id="ov-val">10</span></label>
+        <input type="range" id="overlap" min="0" max="50" step="5" value="10" oninput="document.getElementById('ov-val').innerText=this.value">
+        
+        <label>Top-K Results: <span id="k-val">5</span></label>
+        <input type="range" id="topK" min="1" max="10" step="1" value="5" oninput="document.getElementById('k-val').innerText=this.value">
+    </div>
+
+    <!-- Right Panel: Query & Results -->
+    <div class="panel">
+        <h2>3. Ask a Question</h2>
+        <input type="text" id="question" placeholder="E.g., What can you tell me about Denis?">
+        <button onclick="askQuestion()">Submit Query</button>
+        
+        <div id="loading" style="display:none; color: #666; margin-top: 10px;">Searching and generating answer...</div>
+        
+        <div id="resultArea" style="margin-top: 20px; display: none;">
+            <h3>Answer:</h3>
+            <p id="answerText"></p>
+            <p><small id="reasoningText" style="color: #666;"></small></p>
+            
+            <h3>References (Click to view):</h3>
+            <div id="citationsArea"></div>
+        </div>
+    </div>
+
+    <!-- Modal for viewing chunks -->
+    <div id="modal-overlay" onclick="closeModal()"></div>
+    <div id="modal">
+        <h3 id="modal-title">Chunk Data</h3>
+        <p><strong>Similarity Score:</strong> <span id="modal-score"></span></p>
+        <pre id="modal-text" style="white-space: pre-wrap; background: #f1f5f9; padding: 10px; border-radius: 4px; font-size: 0.9rem;"></pre>
+        <button onclick="closeModal()">Close</button>
+    </div>
+
+    <script>
+        const API_BASE = "http://127.0.0.1:8000/api";
+        let chunkDataMap = {};
+
+        async function loadDocs() {
+            const res = await fetch(`${API_BASE}/documents`);
+            const docs = await res.json();
+            const list = document.getElementById("docList");
+            list.innerHTML = docs.length === 0 ? "<small>No documents uploaded.</small>" : "";
+            docs.forEach(d => {
+                list.innerHTML += `<div class="doc-item">
+                    <small>${d.filename} (${(d.char_count/1000).toFixed(1)}k chars)</small>
+                    <button onclick="deleteDoc('${d.filename}')">Del</button>
+                </div>`;
+            });
+        }
+
+        async function uploadDoc() {
+            const fileInput = document.getElementById("fileInput");
+            if (!fileInput.files[0]) return alert("Select a file first.");
+            const formData = new FormData();
+            formData.append("file", fileInput.files[0]);
+            await fetch(`${API_BASE}/documents/upload`, { method: "POST", body: formData });
+            fileInput.value = "";
+            loadDocs();
+        }
+
+        async function deleteDoc(filename) {
+            await fetch(`${API_BASE}/documents/${filename}`, { method: "DELETE" });
+            loadDocs();
+        }
+
+        async function askQuestion() {
+            const q = document.getElementById("question").value;
+            if (!q) return;
+            
+            document.getElementById("loading").style.display = "block";
+            document.getElementById("resultArea").style.display = "none";
+            
+            const payload = {
+                question: q,
+                chunk_size: parseInt(document.getElementById("chunkSize").value),
+                overlap_percent: parseInt(document.getElementById("overlap").value),
+                top_k: parseInt(document.getElementById("topK").value)
+            };
+
+            const res = await fetch(`${API_BASE}/query`, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify(payload)
+            });
+            
+            const data = await res.json();
+            document.getElementById("loading").style.display = "none";
+            document.getElementById("resultArea").style.display = "block";
+            
+            document.getElementById("answerText").innerText = data.answer;
+            document.getElementById("reasoningText").innerText = "Reasoning: " + data.reasoning;
+            
+            const citationsDiv = document.getElementById("citationsArea");
+            citationsDiv.innerHTML = "";
+            chunkDataMap = {};
+            
+            if (data.cited_chunks.length === 0) {
+                citationsDiv.innerHTML = "<small>No references used.</small>";
+            } else {
+                data.cited_chunks.forEach((chunk, idx) => {
+                    chunkDataMap[chunk.chunk_id] = chunk;
+                    const badge = document.createElement("span");
+                    badge.className = "citation";
+                    badge.innerText = `[${idx + 1}] ${chunk.chunk_id}`;
+                    badge.onclick = () => showModal(chunk.chunk_id);
+                    citationsDiv.appendChild(badge);
+                });
+            }
+        }
+
+        function showModal(chunkId) {
+            const chunk = chunkDataMap[chunkId];
+            document.getElementById("modal-title").innerText = `${chunk.document_name} (${chunk.chunk_id})`;
+            document.getElementById("modal-score").innerText = chunk.similarity_score.toFixed(4);
+            document.getElementById("modal-text").innerText = chunk.excerpt;
+            document.getElementById("modal-overlay").style.display = "block";
+            document.getElementById("modal").style.display = "block";
+        }
+
+        function closeModal() {
+            document.getElementById("modal-overlay").style.display = "none";
+            document.getElementById("modal").style.display = "none";
+        }
+
+        window.onload = loadDocs;
+    </script>
+</body>
+</html>
