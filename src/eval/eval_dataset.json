@@ -1,0 +1,44 @@
+[
+  {
+    "question": "What is Marmeladov's profession or title?",
+    "expected_chunk_ids": [
+      "CrimeAndPunishment-shorter.txt_c6"
+    ],
+    "chunk_size": 800,
+    "overlap_percent": 10,
+    "top_k": 5
+  },
+  {
+    "question": "What did the young man pledge to the old woman?",
+    "expected_chunk_ids": [
+      "CrimeAndPunishment-shorter.txt_c18",
+      "CrimeAndPunishment-shorter.txt_c19"
+    ],
+    "chunk_size": 800,
+    "overlap_percent": 10,
+    "top_k": 5
+  },
+  {
+    "question": "What specific details can you tell me about Denis Amselemovitch?",
+    "expected_chunk_ids": [
+      "CrimeAndPunishment-shorter.txt_c25"
+    ],
+    "chunk_size": 800,
+    "overlap_percent": 10,
+    "top_k": 5
+  },
+  {
+    "question": "What was the weather like on the day Raskolnikov murdered the pawnbroker?",
+    "expected_chunk_ids": [],
+    "chunk_size": 800,
+    "overlap_percent": 10,
+    "top_k": 5
+  },
+  {
+    "question": "How did Raskolnikov's sister, Dounia, react to his crime?",
+    "expected_chunk_ids": [],
+    "chunk_size": 800,
+    "overlap_percent": 10,
+    "top_k": 5
+  }
+]
