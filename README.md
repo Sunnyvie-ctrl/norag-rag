@@ -1,6 +1,9 @@
 # norag-rag project
 
-This workspace contains 2 Python applications to compare **NoRAG** (full-context prompting) versus **RAG** (retrieval-augmented generation) using **Google Gemini** via the **OpenAI SDK**.
+This workspace contains Python applications to compare **NoRAG** (full-context prompting) versus **RAG** (retrieval-augmented generation) using **Google Gemini** via the **OpenAI SDK**.
+
+For the BM25 lexical-retrieval example, see [bm25/README.md](./bm25/README.md).
+For the two-hop retrieval exercise, see the [concept graph challenge](./concepts/concept_graph_challenge_part1.md).
 
 ## Applications
 
@@ -13,13 +16,19 @@ This workspace contains 2 Python applications to compare **NoRAG** (full-context
 2. `ask_rag_google.py`
 - RAG with Google Gemini for generation via OpenAI SDK.
 - Uses local embeddings (`all-MiniLM-L6-v2`) + local ChromaDB (`chroma_db/`) to retrieve relevant chunks before asking the model.
-- Default retrieval uses `n_results=5` for the question: `What does this say about Denis?`
+- Currently points to `docs/CrimeAndPunishment.txt` and retrieves `n_results=5` for the question: `What does this say about Denis?`
+
+3. `bm25/ask_bm25_rag_google.py`
+- RAG with Google Gemini for generation via OpenAI SDK and in-memory BM25 lexical retrieval.
+- See [bm25/README.md](./bm25/README.md) for how it works, how to run it, and the BM25 challenge.
 
 ## Project Structure
 
 - `docs/CrimeAndPunishment.txt`: main source text used by the scripts.
 - `docs/CrimeAndPunishment-shorter.txt`: shortened version of the main source text for quicker testing and rapid experimentation in Gemini online at https://gemini.google.com/app (See note below)
 - `chroma_db/`: persistent local vector database (used by RAG scripts).
+- `bm25/`: BM25 retrieval example and challenges.
+- `concepts/`: multi-hop retrieval challenge.
 - `requirements.txt`: Python dependencies.
 
 ## Prerequisites
@@ -66,6 +75,12 @@ python ask_norag_google.py
 
 ```bash
 python ask_rag_google.py
+```
+
+### 3) BM25 RAG + Google
+
+```bash
+python bm25/ask_bm25_rag_google.py
 ```
 
 ## Notes
