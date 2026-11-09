@@ -1,0 +1,10 @@
+{"question": "What is the full name and former clerk occupation of Marmeladov?", "type": "exact_identifier", "expected_chunk_ids": ["CrimeAndPunishment-shorter.txt_c30", "CrimeAndPunishment-shorter.txt_c34", "CrimeAndPunishment-shorter.txt_c39"]}
+{"question": "What specific silver watch item did Raskolnikov bring as a pledge?", "type": "exact_identifier", "expected_chunk_ids": ["CrimeAndPunishment-shorter.txt_c16", "CrimeAndPunishment-shorter.txt_c17", "CrimeAndPunishment-shorter.txt_c19"]}
+{"question": "How much financial currency in roubles and copecks was paid for the pledge?", "type": "different_vocabulary", "expected_chunk_ids": ["CrimeAndPunishment-shorter.txt_c16", "CrimeAndPunishment-shorter.txt_c18"]}
+{"question": "How is Raskolnikov's cramped garret room and cupboard lodging described?", "type": "different_vocabulary", "expected_chunk_ids": ["CrimeAndPunishment-shorter.txt_c0"]}
+{"question": "Who lives in the apartment with Alyona Ivanovna and what details are given about her sister Lizaveta?", "type": "split_answer", "expected_chunk_ids": ["CrimeAndPunishment-shorter.txt_c15", "CrimeAndPunishment-shorter.txt_c16"]}
+{"question": "What is the relationship between Marmeladov's daughter Sonia and his family's financial situation?", "type": "two_hops", "expected_chunk_ids": ["CrimeAndPunishment-shorter.txt_c30", "CrimeAndPunishment-shorter.txt_c46"]}
+{"question": "Why was Dunya forced to leave her position at the Svidrigailov household?", "type": "not_in_corpus", "expected_chunk_ids": []}
+{"question": "What were Razumikhin's impressions when he visited Raskolnikov during his illness?", "type": "not_in_corpus", "expected_chunk_ids": []}
+{"question": "What was the telephone number of the Saint Petersburg police bureau?", "type": "not_in_corpus", "expected_chunk_ids": []}
+{"question": "What brand of automobile was parked outside the tavern?", "type": "not_in_corpus", "expected_chunk_ids": []}
